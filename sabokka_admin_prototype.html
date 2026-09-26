@@ -1,0 +1,99 @@
+HTML
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>사볼까? 관리자 - 상품 등록</title>
+  
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // 💡 본인의 Supabase 정보로 꼭 변경해 주세요!
+    const SUPABASE_URL = 'https://ukjfsortwjcyijswdhbs.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_9CN5IP0P0gJuSJh1WTDJNg_-YCcA2tc';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, sans-serif; background: #f4f4f5; margin: 0; padding: 20px; color: #18181b; }
+    .container { max-width: 500px; margin: 40px auto; background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    h1 { font-size: 20px; margin-bottom: 20px; text-align: center; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    input { width: 100%; padding: 10px 12px; border: 1px solid #d4d4d8; border-radius: 6px; font-size: 14px; outline: none; }
+    input:focus { border-color: #e51d35; }
+    button { width: 100%; padding: 12px; background: #e51d35; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    button:hover { background: #cc162c; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🛒 상품 등록 (Admin)</h1>
+  <form id="productForm">
+    <div class="form-group">
+      <label for="product_no">상품번호 *</label>
+      <input type="text" id="product_no" placeholder="예: 001 또는 1" required>
+    </div>
+    <div class="form-group">
+      <label for="product_name">상품명 *</label>
+      <input type="text" id="product_name" placeholder="상품 이름을 입력하세요" required>
+    </div>
+    <div class="form-group">
+      <label for="image_url">이미지 URL</label>
+      <input type="url" id="image_url" placeholder="https://example.com/image.jpg">
+    </div>
+    <div class="form-group">
+      <label for="affiliate_url">제휴 링크 URL</label>
+      <input type="url" id="affiliate_url" placeholder="https://link.coupang.com/...">
+    </div>
+    <button type="submit" id="submitBtn">DB에 저장하기</button>
+  </form>
+</div>
+
+<script>
+  document.getElementById('productForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    
+    // 입력값 정리 (상품번호는 항상 3자리 숫자로 포맷팅: 예 1 -> 001)
+    const rawNo = document.getElementById('product_no').value.trim().replace(/^#/, "");
+    const productNo = rawNo.padStart(3, '0');
+    const productName = document.getElementById('product_name').value.trim();
+    const imageUrl = document.getElementById('image_url').value.trim();
+    const affiliateUrl = document.getElementById('affiliate_url').value.trim();
+
+    btn.disabled = true;
+    btn.textContent = '저장 중...';
+
+    try {
+      // Supabase products 테이블에 데이터 추가
+      const { data, error } = await supabaseClient
+        .from('products')
+        .insert([
+          {
+            product_no: productNo,
+            product_name: productName,
+            image_url: imageUrl || null,
+            affiliate_url: affiliateUrl || null
+          }
+        ]);
+
+      if (error) throw error;
+
+      alert(`[상품번호 ${productNo}] 성공적으로 DB에 등록되었습니다!`);
+      document.getElementById('productForm').reset();
+    } catch (err) {
+      console.error(err);
+      alert('저장 중 오류가 발생했습니다: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'DB에 저장하기';
+    }
+  });
+</script>
+
+</body>
+</html>
